@@ -1,0 +1,258 @@
+#define _CRT_SECURITY_NO_WARNINGS_
+
+#include <stdlib.h>
+
+#include <stdio.h>
+
+#include <string.h>
+
+typedef struct Way{
+
+char firstStation[32];//пункт отправки
+
+char secondStation[32];//пункт назначения
+
+char wayName[32];//навзание маршрута
+
+}Way;
+
+void ToFile(Way *way, int len){//сохранение в файл
+
+FILE *f = fopen("out.b", "wb");
+
+fwrite(&len, sizeof(int), 1, f);
+
+fwrite(way, sizeof(Way), len, f);
+
+fclose(f);
+
+}
+
+void FromFile(Way *way, int *len){//загрузка из файла
+
+FILE *f = fopen("out.b", "rb");
+
+if(f){
+
+fread(len, sizeof(int), 1, f);
+
+fread(way, sizeof(Way), *len, f);
+
+fclose(f);
+
+}
+
+}
+
+void Add(Way *way, int *len){//добавление новой записи
+
+printf("\nEnter name, start, end\n");
+
+scanf("%s %s %s", way[*len].wayName, way[*len].firstStation, way[*len].secondStation);
+
+*len += 1;
+
+}
+
+void Delete(Way *way, int *len){//удалении первой записи с указанным именем
+
+char temp[32];
+
+int i;
+
+printf("\nEnter name: ");
+
+scanf("%s", temp);
+
+for(i = 0; i < *len; ++i){
+
+if(strcmp(way[i].wayName, temp) ==0){
+
+break;
+
+}
+
+}
+
+*len -= 1;
+
+for(i; i < *len; i++){
+
+way[i] = way[i + 1];
+
+}
+
+}
+
+void Change(Way *way, int len){//изменение записи по её имени
+
+char temp[32];
+
+int i;
+
+printf("\nEnter name: ");
+
+scanf("%s", temp);
+
+for(i = 0; i < len; ++i){
+
+if(strcmp(way[i].wayName, temp) ==0){
+
+break;
+
+}
+
+}
+
+printf("\nEnter new name, start, end\n");
+
+scanf("%s %s %s", way[i].wayName, way[i].firstStation, way[i].secondStation);
+
+}
+
+void Print(Way *way, int len){//вывод всей базы в косноль
+
+int i;
+
+for(i = 0; i < len; ++i){
+
+printf("\nName: %s\n%s - %s", way[i].wayName, way[i].firstStation, way[i].secondStation);
+
+}
+
+}
+
+int searchStart(Way *way, int len, int i, char *start){//поиск маршрута по пункту отправления
+
+for(i; i < len; i++){
+
+if(strcmp(way[i].firstStation, start) == 0){
+
+return i;
+
+}
+
+}
+
+return -1;
+
+}
+
+void Search(Way *way, int len,char *start, char *end, int *flag){//поиск маршрута
+
+int d = -1;
+
+while(1){
+
+d = searchStart(way, len, d + 1, start);//ищем маршгрут начала
+
+if(d == -1) break; //если дошли до конца
+
+if(strcmp(way[d].secondStation, end) == 0) {//если конечная - выводим
+
+printf("\n%s: %s -> %s", way[d].wayName, way[d].firstStation, way[d].secondStation);
+
+*flag = 1;
+
+break;
+
+}
+
+else{
+Search(way, len, way[d].secondStation, end, flag);
+
+}
+
+if(*flag){
+
+printf("\n%s: %s -> %s", way[d].wayName, way[d].firstStation, way[d].secondStation);
+
+break;
+
+}
+
+}
+
+}
+
+int main(){
+
+Way way[100];
+
+char start[32];//начальная станция
+
+char end[32];//конечная станция
+
+int len = 0;
+
+int d;
+
+int i, flag;
+
+FromFile(way, &len);
+
+while(1){
+
+printf("\n1 Insert\n2 Change\n3 Remove\n4 Print\n5 Find\n");
+
+scanf("%d", &d);
+
+if(d == 1){
+
+Add(way, &len);
+
+ToFile(way, len);
+
+}
+
+else if(d == 2){
+
+Change(way, len);
+
+ToFile(way, len);
+
+}
+
+else if(d == 3){
+
+Delete(way, &len);
+
+ToFile(way, len);
+
+}
+
+else if(d == 4){
+
+Print(way, len);
+
+}
+
+else if(d == 5){
+
+printf("\nEnter start, end: \n");
+
+scanf("%s %s", start, end);
+
+d = -1;
+
+flag = 0;
+
+Search(way, len, start, end, &flag);
+
+if(!flag){
+
+printf("\nNot found");
+
+}
+
+}
+
+else{
+
+break;
+
+}
+
+}
+
+}
